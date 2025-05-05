@@ -1,0 +1,9 @@
+Eval: init:  dataset: EuroSAT ACC: 0.978510559466469
+Eval: init:  dataset: DTD ACC: 0.6324468085106383
+Eval: init:  Avg ACC:0.8054786839885537
+
+[tensor([1.0000, 0.4956, 0.6867])]
+Eval: Epoch: 499 dataset: EuroSAT ACC: 0.9855502037791775
+Eval: Epoch: 499 dataset: DTD ACC: 0.7867021276595745
+Eval: Epoch: 499 Avg ACC:0.886126165719376
+
