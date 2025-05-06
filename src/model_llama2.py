@@ -44,12 +44,12 @@ class AdaMergingLlama2(nn.Module):
 
     def load_weights(self):
         with torch.no_grad():
-            alphas = self.lambdas().cpu()  # work on CPU
+            alphas = self.lambdas().cpu()
             lambda_a = alphas[0]
             lambda_b = alphas[1]
-            
+
             for idx, name in enumerate(self.names):
-                base_weight = self.paramslist[0][idx].cpu()  # move to CPU
+                base_weight = self.paramslist[0][idx].cpu()
                 final_weight = base_weight
 
                 if 'q_proj' in name or 'v_proj' in name:
@@ -76,11 +76,13 @@ class AdaMergingLlama2(nn.Module):
                         if delta.shape == base_weight.shape:
                             final_weight = base_weight + delta
 
+                        del A_list, B_list, merged_A, merged_B, delta  # <-- only inside here
+
                 # Move only final tensor back to GPU
                 final_weight = final_weight.to(self.device, dtype=torch.float16)
                 self.set_attr(self.model_structure, name.split('.'), final_weight)
 
-                del base_weight, final_weight, A_list, B_list, merged_A, merged_B, delta
+                del base_weight, final_weight
                 torch.cuda.empty_cache()
 
     def forward(self, input_ids, attention_mask=None, generate_kwargs=None):
