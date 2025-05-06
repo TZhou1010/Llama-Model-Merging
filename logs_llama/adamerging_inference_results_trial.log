@@ -1,0 +1,10 @@
+
+=== Evaluation after epoch 20 ===
+Dataset: cb | exact_match: 0.0000
+Dataset: wnli | exact_match: 0.0000
+Dataset: wsc | exact_match: 0.0000
+
+=== Evaluation after epoch 20 ===
+Dataset: cb | exact_match: 0.0000
+Dataset: wnli | exact_match: 0.0000
+Dataset: wsc | exact_match: 0.0000
