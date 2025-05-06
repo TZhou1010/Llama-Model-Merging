@@ -44,41 +44,44 @@ class AdaMergingLlama2(nn.Module):
 
     def load_weights(self):
         with torch.no_grad():
-            alphas = self.lambdas()
-            lambda_a, lambda_b = alphas[0], alphas[1]
-            dtype = torch.float16
-            merged_params = []
-
+            alphas = self.lambdas().cpu()  # work on CPU
+            lambda_a = alphas[0]
+            lambda_b = alphas[1]
+            
             for idx, name in enumerate(self.names):
-                base_weight = self.paramslist[0][idx]
-                base_weight = base_weight.to(dtype)
+                base_weight = self.paramslist[0][idx].cpu()  # move to CPU
                 final_weight = base_weight
 
                 if 'q_proj' in name or 'v_proj' in name:
                     A_list, B_list = [], []
+
                     for lora_idx in range(1, self.n_models):
                         lora_dict = self.paramslist[lora_idx]
+
                         key_A = base_to_lora_key(name, 'lora_A.weight')
                         key_B = base_to_lora_key(name, 'lora_B.weight')
-
                         if key_A in lora_dict and key_B in lora_dict:
-                            A_list.append(lora_dict[key_A])
-                            B_list.append(lora_dict[key_B])
+                            A_list.append(lora_dict[key_A].cpu())
+                            B_list.append(lora_dict[key_B].cpu())
 
                     if A_list and B_list:
-                        A_stack = torch.stack(A_list).to(self.device)
-                        B_stack = torch.stack(B_list).to(self.device)
+                        A_stack = torch.stack(A_list, dim=0)
+                        B_stack = torch.stack(B_list, dim=0)
+
                         merged_A = (lambda_a[:, None, None] * A_stack).sum(dim=0)
                         merged_B = (lambda_b[:, None, None] * B_stack).sum(dim=0)
 
-                        delta = (merged_B @ merged_A).to(dtype)
+                        delta = merged_B @ merged_A
+
                         if delta.shape == base_weight.shape:
                             final_weight = base_weight + delta
 
-                merged_params.append(final_weight.to(self.device))
+                # Move only final tensor back to GPU
+                final_weight = final_weight.to(self.device, dtype=torch.float16)
+                self.set_attr(self.model_structure, name.split('.'), final_weight)
 
-            for name, param in zip(self.names, merged_params):
-                self.set_attr(self.model_structure, name.split('.'), param)
+                del base_weight, final_weight, A_list, B_list, merged_A, merged_B, delta
+                torch.cuda.empty_cache()
 
     def forward(self, input_ids, attention_mask=None, generate_kwargs=None):
         outputs = self.model_structure(
