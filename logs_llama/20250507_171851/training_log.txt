@@ -1,0 +1,8 @@
+Epoch 1: Avg Loss = 4.1728
+Epoch 2: Avg Loss = 4.1727
+Epoch 3: Avg Loss = 4.1729
+
+=== Evaluation after epoch 3 ===
+Dataset: arc_challenge | exact_match: 0.0000
+Dataset: wsc | exact_match: 0.0000
+Dataset: wnli | exact_match: 0.0000
